@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-whitelabel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-whitelabel}
+      POSTGRES_DB: ${POSTGRES_DB:-whitelabel}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-whitelabel} -d ${POSTGRES_DB:-whitelabel}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    # Descomenta para conectarte a la base desde tu máquina (ej. TablePlus, DBeaver):
+    # ports:
+    #   - "5432:5432"
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-whitelabel}:${POSTGRES_PASSWORD:-whitelabel}@db:5432/${POSTGRES_DB:-whitelabel}?schema=public
+      AUTH_SECRET: ${AUTH_SECRET:-dev-secret-cambiame-en-produccion}
+      AUTH_URL: ${AUTH_URL:-http://localhost:3000}
+      AUTH_TRUST_HOST: "true"
+      AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID:-}
+      AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET:-}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-soyadmin@admin.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-0987654321}
+      ADMIN_NAME: ${ADMIN_NAME:-Administrador}
+      APP_NAME: ${APP_NAME:-White Label}
+
+volumes:
+  pgdata:

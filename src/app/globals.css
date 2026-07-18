@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    color-scheme: dark;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-[#060606] font-sans text-neutral-50 antialiased;
+  }
+
+  ::selection {
+    @apply bg-white text-black;
+  }
+
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #fafafa;
+    transition: background-color 9999s ease-in-out 0s;
+  }
+}
+
+@layer components {
+  .btn-solid {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-black transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_32px_rgba(255,255,255,0.25)] active:scale-[0.97] disabled:pointer-events-none disabled:opacity-60;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-white/15 bg-transparent px-5 py-2.5 text-sm font-medium text-white transition-all duration-300 hover:border-white/45 hover:bg-white/5 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-60;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.22em] text-neutral-300;
+  }
+
+  .card {
+    @apply rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl;
+  }
+
+  .field {
+    @apply w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-neutral-500 outline-none transition-all duration-300 focus:border-white/40 focus:bg-white/[0.07] focus:shadow-[0_0_0_4px_rgba(255,255,255,0.06)];
+  }
+
+  .link-underline {
+    @apply relative text-white transition-opacity hover:opacity-80;
+  }
+
+  .link-underline::after {
+    content: "";
+    @apply absolute -bottom-0.5 left-0 h-px w-0 bg-white transition-all duration-300;
+  }
+
+  .link-underline:hover::after {
+    @apply w-full;
+  }
+}
+
+@layer utilities {
+  /* Titular con brillo animado en escala de grises */
+  .text-shimmer {
+    background: linear-gradient(110deg, #ffffff 35%, #6b6b6b 50%, #ffffff 65%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer 6s linear infinite;
+  }
+
+  /* Rejilla de fondo */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+
+  /* Grano sutil para textura premium */
+  .noise {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    opacity: 0.05;
+  }
+}

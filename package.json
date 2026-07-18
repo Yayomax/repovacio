@@ -1,0 +1,36 @@
+{
+  "name": "whitelabel-auth-portal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Base white-label: portal de autenticación y gestión de usuarios con Docker + PostgreSQL",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "db:push": "prisma db push",
+    "db:seed": "node prisma/seed.js",
+    "db:studio": "prisma studio",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@auth/prisma-adapter": "^2.10.0",
+    "@prisma/client": "^6.5.0",
+    "bcryptjs": "^2.4.3",
+    "next": "^15.1.6",
+    "next-auth": "5.0.0-beta.29",
+    "prisma": "^6.5.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.0"
+  }
+}
