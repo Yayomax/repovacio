@@ -25,6 +25,162 @@ model User {
 
   accounts Account[]
   sessions Session[]
+  orders   Order[]
+}
+
+// ─────────────────────────────────────────────────────────────
+// Ecommerce
+// ─────────────────────────────────────────────────────────────
+
+/// Configuración de la tienda (fila única, id = 1). Editable desde /admin/configuracion.
+model StoreConfig {
+  id       Int    @id @default(1)
+  storeName String @default("White Label")
+  tagline   String?
+  currency  String @default("ARS")
+
+  // Pago por transferencia bancaria
+  transferEmail  String? /// email al que los clientes envían el comprobante
+  transferAlias  String?
+  transferCbu    String?
+  transferHolder String?
+  transferNotes  String?
+
+  // Mercado Pago
+  mpPublicKey   String?
+  mpAccessToken String?
+
+  // Envío de emails (SMTP)
+  smtpHost         String?
+  smtpPort         Int?
+  smtpUser         String?
+  smtpPass         String?
+  emailFrom        String?
+  adminNotifyEmail String? /// recibe aviso de nuevos pedidos
+
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  position  Int       @default(0)
+  createdAt DateTime  @default(now())
+  products  Product[]
+}
+
+model Product {
+  id             String   @id @default(cuid())
+  name           String
+  slug           String   @unique
+  description    String?
+  priceCents     Int
+  compareAtCents Int? /// precio anterior tachado (oferta)
+  active         Boolean  @default(true)
+  featured       Boolean  @default(false)
+  /// Opciones definidas por el admin: [{ "name": "Talle", "values": ["S","M","L"] }]
+  options        Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  categories Category[]
+  images     ProductImage[]
+  variants   ProductVariant[]
+  orderItems OrderItem[]
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  path      String /// ruta relativa dentro de /uploads
+  alt       String?
+  position  Int     @default(0)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+/// Cada combinación de opciones con su stock. Un producto sin opciones
+/// tiene una única variante "default".
+model ProductVariant {
+  id         String  @id @default(cuid())
+  productId  String
+  name       String /// ej. "Negro / M" o "Único"
+  optionsKey String /// combinación normalizada, ej. "color=negro|talle=m"
+  sku        String?
+  priceCents Int? /// override opcional del precio del producto
+  stock      Int     @default(0)
+
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+
+  @@unique([productId, optionsKey])
+}
+
+model ShippingOption {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  priceCents  Int     @default(0)
+  active      Boolean @default(true)
+  position    Int     @default(0)
+}
+
+enum PaymentMethod {
+  MERCADOPAGO
+  TRANSFER
+}
+
+enum OrderStatus {
+  PENDING /// esperando pago (o validación de transferencia)
+  PAID /// pago confirmado
+  FULFILLED /// entregado / enviado
+  CANCELLED
+}
+
+model Order {
+  id     String @id @default(cuid())
+  code   String @unique /// código corto para el cliente, ej. "WL-4F7K2Q"
+  userId String?
+  email  String
+  name   String
+  phone  String?
+
+  address       String?
+  notes         String?
+  shippingName  String? /// snapshot de la opción de envío elegida
+  shippingCents Int     @default(0)
+
+  subtotalCents Int
+  totalCents    Int
+
+  paymentMethod  PaymentMethod
+  status         OrderStatus   @default(PENDING)
+  mpPreferenceId String?
+  mpPaymentId    String?
+  paidAt         DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  items OrderItem[]
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  productId   String?
+  variantId   String?
+  productName String /// snapshot al momento de la compra
+  variantName String?
+  imagePath   String?
+  unitCents   Int
+  quantity    Int
+
+  order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
 }
 
 model Account {

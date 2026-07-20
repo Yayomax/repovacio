@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Toaster } from "sonner";
 import { appName } from "@/lib/brand";
 import "./globals.css";
 
@@ -16,7 +17,20 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body>
+        {children}
+        <Toaster
+          theme="dark"
+          position="bottom-right"
+          toastOptions={{
+            style: {
+              background: "#111111",
+              border: "1px solid rgba(255,255,255,0.12)",
+              color: "#fafafa",
+            },
+          }}
+        />
+      </body>
     </html>
   );
 }

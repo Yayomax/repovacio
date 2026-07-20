@@ -14,6 +14,9 @@ next-env.d.ts
 # Prisma
 prisma/*.db
 
+# Imágenes subidas por el admin (en Docker viven en el volumen "uploads")
+uploads/
+
 # Sistema / editores
 .DS_Store
 *.log

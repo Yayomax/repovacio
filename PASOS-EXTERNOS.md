@@ -4,134 +4,187 @@ Todo lo demás ya está hecho. Este archivo lista **únicamente** las cosas que
 requieren una acción tuya fuera de este repositorio (crear secretos, dar de
 alta credenciales en otros sistemas, etc.).
 
-> **TL;DR:** la app funciona sin hacer nada de esto (`docker compose up --build`
-> y listo). Solo necesitas estos pasos para: **(1)** habilitar el botón
-> "Continuar con Google" y **(2)** dejarla lista para producción.
+> **TL;DR:** la app funciona sin nada de esto (`docker compose up --build` y
+> listo). Estos pasos activan: **(1)** cobros con Mercado Pago, **(2)** datos
+> de transferencia, **(3)** emails automáticos, **(4)** login con Google y
+> **(5)** producción segura.
+>
+> 👉 Los puntos 1, 2 y 3 **no tocan archivos**: las claves se cargan desde el
+> panel en **Admin → Configuración**, quedan en tu base de datos y se activan
+> al instante.
 
 ---
 
-## 1. Generar tu `AUTH_SECRET` (2 minutos) — recomendado
+## 1. Mercado Pago — las dos claves para cobrar (15 minutos)
 
-Auth.js firma las sesiones (JWT) con este secreto. En desarrollo hay un valor
-por defecto, pero genera el tuyo:
+Para procesar pagos, Mercado Pago te da **dos credenciales** que este sistema
+necesita:
+
+| Credencial | Para qué la usa la tienda |
+|---|---|
+| **Public Key** | Identifica tu cuenta en el checkout |
+| **Access Token** | Crea las preferencias de pago y verifica los pagos contra la API (secreta) |
+
+### 1.1 Crear la aplicación
+
+1. Entra a <https://www.mercadopago.com.ar/developers> (o el dominio de tu
+   país) e inicia sesión con **la cuenta que va a recibir el dinero**.
+2. Arriba a la derecha → **“Tus integraciones”** → **“Crear aplicación”**.
+3. Completa:
+   - Nombre: el de tu tienda (ej. `Mi Tienda Online`).
+   - ¿Qué producto vas a integrar?: **CheckoutPro** (pagos online).
+   - Modelo de integración: tienda online / carrito propio.
+4. Acepta y crea. Ya tienes tu aplicación.
+
+### 1.2 Copiar las credenciales
+
+1. Dentro de la aplicación, menú lateral → **“Credenciales de producción”**.
+2. Puede pedirte completar datos del negocio (actividad, sitio). Complétalos.
+3. Copia:
+   - **Public Key** → empieza con `APP_USR-...`
+   - **Access Token** → empieza con `APP_USR-...` (este es secreto: no lo
+     compartas ni lo subas a Git).
+
+> 💡 Para **probar sin dinero real**: usa las **“Credenciales de prueba”** de
+> la misma pantalla, y paga con las tarjetas de prueba que lista la
+> documentación de MP. Cuando todo funcione, cámbialas por las de producción.
+
+### 1.3 Cargarlas en la tienda
+
+1. Inicia sesión como admin → **Admin → Configuración → Pagos**.
+2. Pega la Public Key y el Access Token → **Guardar cambios**.
+3. Listo: la opción “Mercado Pago” aparece automáticamente en el checkout.
+
+### 1.4 Webhook (solo cuando tengas dominio con HTTPS)
+
+En local, la tienda verifica el pago cuando el cliente vuelve del checkout.
+En producción, además, MP notifica por webhook — la app ya expone
+`/api/webhooks/mercadopago` y lo registra sola en cada preferencia cuando
+`AUTH_URL` es `https://...`. No tienes que configurar nada en el panel de MP,
+aunque también puedes agregarlo manualmente en *Tus integraciones → Webhooks*:
+
+```
+https://tudominio.com/api/webhooks/mercadopago
+```
+
+---
+
+## 2. Transferencia bancaria — tus datos (2 minutos)
+
+No hay claves externas: solo carga tus datos en
+**Admin → Configuración → Pagos → Transferencia bancaria**:
+
+- **Alias** y/o **CBU/CVU** y titular de la cuenta.
+- **Email para comprobantes**: la casilla donde quieres recibir los
+  comprobantes. El sistema le indica al cliente que envíe ahí el comprobante
+  junto con su **código de pedido** (ej. `WL-4F7K2Q`), con un botón de email
+  pre-armado.
+
+Cuando llegue un comprobante: **Admin → Pedidos → (pedido) → “Validar pago
+recibido”**. El cliente recibe la confirmación por email automáticamente.
+
+---
+
+## 3. Emails automáticos — SMTP (10 minutos)
+
+La tienda envía: confirmación de pedido, instrucciones de transferencia,
+confirmación de pago y aviso de nuevos pedidos para ti. Para eso necesita una
+cuenta SMTP. Configúrala en **Admin → Configuración → Emails**.
+
+> Sin SMTP la tienda funciona igual: los emails se escriben en los logs del
+> contenedor (`docker compose logs app`).
+
+### Opción A — Gmail (rápida para empezar)
+
+1. Activa la **verificación en 2 pasos** en tu cuenta de Google.
+2. Ve a <https://myaccount.google.com/apppasswords> → crea una
+   **contraseña de aplicación** (16 caracteres).
+3. En la tienda:
+   - Servidor: `smtp.gmail.com` · Puerto: `587`
+   - Usuario: `tu@gmail.com` · Contraseña: la de aplicación
+   - Remitente: `"Mi Tienda" <tu@gmail.com>`
+
+### Opción B — Servicio transaccional (recomendada en producción)
+
+[Resend](https://resend.com), [Brevo](https://www.brevo.com) o
+[Mailgun](https://www.mailgun.com) tienen plan gratuito: crea la cuenta,
+verifica tu dominio y usa el SMTP que te dan (en Resend: host
+`smtp.resend.com`, puerto `465`, usuario `resend`, contraseña = API key).
+
+---
+
+## 4. `AUTH_SECRET` propio (2 minutos) — recomendado
+
+Auth.js firma las sesiones con este secreto. Genera el tuyo:
 
 ```bash
 openssl rand -base64 32
 ```
 
-(Si no tienes `openssl`, también sirve: `npx auth secret` o cualquier cadena
-aleatoria larga.)
-
-Luego crea tu `.env` (si aún no existe) y pégalo:
-
-```bash
-cp .env.example .env
-# edita .env y reemplaza AUTH_SECRET con el valor generado
-```
-
-⚠️ En producción es **obligatorio**: nunca uses el valor por defecto.
+Ponlo en tu `.env` (`cp .env.example .env` si no existe) como `AUTH_SECRET`.
+⚠️ En producción es **obligatorio** no usar el valor por defecto.
 
 ---
 
-## 2. Credenciales de Google OAuth (10 minutos) — para el login con Google
+## 5. Google OAuth — login con Google (10 minutos, opcional)
 
-Sin estas credenciales la app funciona igual, solo que **el botón de Google no
-se muestra**. Para habilitarlo:
+Sin esto la app funciona igual (el botón de Google no se muestra).
 
-### 2.1 Crear el proyecto en Google Cloud
-
-1. Entra a <https://console.cloud.google.com/> con tu cuenta de Google.
-2. Arriba a la izquierda: selector de proyectos → **"Nuevo proyecto"**.
-3. Ponle un nombre (ej. `mi-portal`) → **Crear** → selecciónalo.
-
-### 2.2 Configurar la pantalla de consentimiento
-
-1. Menú ☰ → **APIs y servicios → Pantalla de consentimiento de OAuth**
-   (Google lo llama ahora "Google Auth Platform / Branding").
-2. Tipo de usuario: **Externo** → **Crear**.
-3. Completa lo mínimo:
-   - Nombre de la app: el que quieras (ej. `White Label`).
-   - Email de asistencia: tu email.
-   - Datos de contacto del desarrollador: tu email.
-4. Guarda. No necesitas agregar scopes extra (email y perfil vienen por defecto).
-5. Si la app queda en modo **"Prueba" (Testing)**: agrega en **Test users** los
-   emails de Google con los que vas a probar (por ejemplo el tuyo,
-   `yayomolina2004@gmail.com`). Solo esos podrán loguearse hasta que publiques
-   la app ("Publish app" → producción).
-
-### 2.3 Crear el cliente OAuth
-
-1. Menú ☰ → **APIs y servicios → Credenciales**.
-2. **+ Crear credenciales → ID de cliente de OAuth**.
-3. Tipo de aplicación: **Aplicación web**.
-4. Nombre: el que quieras.
-5. **Orígenes de JavaScript autorizados**:
-   ```
-   http://localhost:3000
-   ```
-6. **URIs de redireccionamiento autorizados** (este es el importante):
-   ```
-   http://localhost:3000/api/auth/callback/google
-   ```
-7. **Crear** → Google te muestra el **ID de cliente** y el **Secreto de cliente**.
-   Cópialos ahora (el secreto se puede volver a ver en la lista de credenciales).
-
-### 2.4 Ponerlos en el proyecto
-
-En tu `.env` (junto al `docker-compose.yml`):
+1. <https://console.cloud.google.com/> → nuevo proyecto.
+2. **APIs y servicios → Pantalla de consentimiento** → tipo **Externo** →
+   completa nombre y emails → guarda. Si queda en modo “Prueba”, agrega tus
+   emails en **Test users**.
+3. **APIs y servicios → Credenciales → + Crear credenciales → ID de cliente
+   OAuth** → **Aplicación web**:
+   - Orígenes: `http://localhost:3000`
+   - URI de redirección: `http://localhost:3000/api/auth/callback/google`
+4. Copia el ID y el secreto a tu `.env`:
 
 ```env
-AUTH_GOOGLE_ID=xxxxxxxxxxxx.apps.googleusercontent.com
-AUTH_GOOGLE_SECRET=GOCSPX-xxxxxxxxxxxxxxxx
+AUTH_GOOGLE_ID=xxxxxxxx.apps.googleusercontent.com
+AUTH_GOOGLE_SECRET=GOCSPX-xxxxxxxx
 ```
 
-Reinicia los contenedores para que tomen los valores:
-
-```bash
-docker compose up -d --build
-```
-
-Listo: el botón **"Continuar con Google"** aparece solo en login y registro.
+5. `docker compose up -d --build` para aplicar.
 
 ---
 
-## 3. Cambiar la contraseña del admin — antes de exponer la app
-
-El usuario administrador se crea automáticamente en cada arranque:
+## 6. Cambiar la contraseña del admin — antes de exponer la app
 
 | Campo | Valor por defecto |
 |---|---|
 | Email | `soyadmin@admin.com` |
 | Contraseña | `0987654321` |
 
-Para cambiarla, edita en tu `.env`:
+En tu `.env`:
 
 ```env
 ADMIN_EMAIL=soyadmin@admin.com
 ADMIN_PASSWORD=una-contraseña-fuerte
 ```
 
-y reinicia (`docker compose up -d`). El seed sincroniza la contraseña del
-admin con ese valor en cada arranque.
+y reinicia (`docker compose up -d`). El seed sincroniza el admin en cada
+arranque.
 
 ---
 
-## 4. Checklist para producción (cuando llegue el día)
+## 7. Checklist para producción
 
-- [ ] `AUTH_SECRET` propio y secreto (paso 1).
-- [ ] `AUTH_URL=https://tudominio.com` en el `.env` del servidor.
-- [ ] En Google Cloud, agregar el dominio real:
-  - Origen: `https://tudominio.com`
-  - Redirect: `https://tudominio.com/api/auth/callback/google`
-  - Publicar la app (salir del modo "Prueba").
-- [ ] `POSTGRES_PASSWORD` fuerte (y no exponer el puerto 5432 públicamente).
-- [ ] `ADMIN_PASSWORD` fuerte (paso 3).
-- [ ] Servir detrás de HTTPS (Caddy, Nginx + certbot, Traefik o el proxy de tu hosting).
+- [ ] `AUTH_SECRET` propio (paso 4).
+- [ ] `AUTH_URL=https://tudominio.com` en el `.env` del servidor (activa
+      también el webhook automático de MP).
+- [ ] Credenciales de **producción** de Mercado Pago (no las de prueba).
+- [ ] SMTP configurado con un remitente de tu dominio (paso 3, opción B).
+- [ ] En Google Cloud (si usas login con Google): agregar
+      `https://tudominio.com` y su URI de callback; publicar la app.
+- [ ] `POSTGRES_PASSWORD` fuerte y puerto 5432 sin exponer.
+- [ ] `ADMIN_PASSWORD` fuerte (paso 6).
+- [ ] HTTPS con Caddy, Nginx + certbot, Traefik o el proxy de tu hosting.
+- [ ] Backup del volumen `pgdata` (base de datos) y `uploads` (imágenes).
 
 ---
 
-## 5. Nada más
+## 8. Nada más
 
-No se necesita ningún otro secreto ni servicio externo: la base de datos, las
-migraciones, el seed del admin y el registro de usuarios son 100 % locales y
-automáticos.
+Catálogo, categorías, variantes, stock, imágenes, pedidos y validación de
+transferencias funcionan 100 % dentro de la app, sin servicios externos.

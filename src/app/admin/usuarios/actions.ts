@@ -22,7 +22,7 @@ export async function deleteUser(formData: FormData) {
   if (userId === session.user.id) return;
 
   await prisma.user.delete({ where: { id: userId } });
-  revalidatePath("/admin");
+  revalidatePath("/admin/usuarios");
 }
 
 export async function toggleUserRole(formData: FormData) {
@@ -40,5 +40,5 @@ export async function toggleUserRole(formData: FormData) {
     where: { id: userId },
     data: { role: user.role === "ADMIN" ? "USER" : "ADMIN" },
   });
-  revalidatePath("/admin");
+  revalidatePath("/admin/usuarios");
 }

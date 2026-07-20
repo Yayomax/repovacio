@@ -44,7 +44,7 @@ COPY --from=builder /app/public ./public
 COPY package.json ./
 COPY prisma ./prisma
 COPY docker/entrypoint.sh ./entrypoint.sh
-RUN chmod +x ./entrypoint.sh && chown -R app:app /app
+RUN mkdir -p /app/uploads && chmod +x ./entrypoint.sh && chown -R app:app /app
 USER app
 EXPOSE 3000
 CMD ["./entrypoint.sh"]

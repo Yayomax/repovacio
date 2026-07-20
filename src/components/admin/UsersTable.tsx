@@ -1,6 +1,6 @@
 "use client";
 
-import { deleteUser, toggleUserRole } from "@/app/admin/actions";
+import { deleteUser, toggleUserRole } from "@/app/admin/usuarios/actions";
 
 type UserRow = {
   id: string;

@@ -1,23 +1,12 @@
-# ⬛ White Label — Portal de acceso premium
+# ⬛ White Label Shop — Ecommerce premium en blanco y negro
 
-Base **white-label** de autenticación y gestión de usuarios, pensada para ser
-el punto de partida de tus próximos proyectos. Diseño minimalista en blanco y
-negro con animaciones, lista para ponerle tu marca.
+Ecommerce **white-label** completo y listo para cualquier rubro: catálogo con
+categorías definidas por el admin, variantes con stock por combinación,
+Mercado Pago + transferencia bancaria, emails automáticos y un panel de
+administración pensado para el trabajo diario.
 
-## ✨ Qué incluye
-
-- 🐳 **Docker Compose**: app + PostgreSQL con un solo comando.
-- 🔐 **Autenticación completa** con [Auth.js](https://authjs.dev):
-  - Email y contraseña (registro abierto a cualquier persona).
-  - **Google OAuth** (se activa solo al configurar las credenciales).
-  - Sesiones JWT seguras y middleware que protege las rutas.
-- 👥 **Gestión de usuarios**: panel de administración con estadísticas,
-  cambio de roles (admin/usuario) y eliminación de cuentas.
-- 🌱 **Seed automático** del usuario administrador en cada arranque.
-- 🎨 **Diseño premium blanco y negro**: fondo animado con orbes y rejilla,
-  grano sutil, micro-interacciones y transiciones en toda la interfaz.
-- 🏷️ **White label real**: cambia `APP_NAME` en el `.env` y toda la app se
-  renombra sola.
+> 🧬 ¿Solo necesitas login + gestión de usuarios para otro proyecto? La base
+> sin ecommerce vive en la rama [`plantilla-gestion-usuarios`](../../tree/plantilla-gestion-usuarios).
 
 ## 🚀 Arrancar en 30 segundos
 
@@ -25,97 +14,120 @@ negro con animaciones, lista para ponerle tu marca.
 docker compose up --build
 ```
 
-Abre <http://localhost:3000>. Eso es todo: se crea la base de datos, se
-aplica el esquema y se siembra el usuario administrador.
-
-### Credenciales del administrador (por defecto)
+Abre <http://localhost:3000>. Se crea la base, se aplica el esquema y se
+siembra el administrador:
 
 | Email | Contraseña |
 |---|---|
 | `soyadmin@admin.com` | `0987654321` |
 
-Cualquier otra persona puede crear su cuenta desde **/register**.
+Entra con ese usuario → **Panel admin** → carga tu primer producto. Las
+claves de pago y el SMTP se cargan después desde **Admin → Configuración**
+(guía completa en [`PASOS-EXTERNOS.md`](./PASOS-EXTERNOS.md)).
 
-> 🔑 **¿Login con Google?** Necesitas crear credenciales OAuth (10 min).
-> Los pasos exactos están en [`PASOS-EXTERNOS.md`](./PASOS-EXTERNOS.md).
+## ✨ Qué incluye
 
-## 🗺️ Rutas
+### Tienda (clientes)
+- 🏪 Portada con destacados y categorías, catálogo con búsqueda y filtros.
+- 🧩 Página de producto con galería, selector de variantes (talle, color, lo
+  que definas) y stock en vivo por combinación.
+- 🛒 Carrito con drawer animado + página completa, persistente en el navegador.
+- 💳 Checkout con **Mercado Pago** (Checkout Pro) y **transferencia bancaria**
+  con instrucciones paso a paso, código de pedido y botón de email pre-armado.
+- 🚚 Opciones de envío definidas por el admin (la logística la coordinas tú).
+- 📦 Página de seguimiento del pedido + “Mis pedidos” para cada cliente.
+- 🔐 Registro abierto, login con email/contraseña y Google (opcional).
 
-| Ruta | Descripción | Acceso |
-|---|---|---|
-| `/` | Landing con animaciones | Pública |
-| `/login` | Iniciar sesión (email/contraseña + Google) | Pública |
-| `/register` | Crear cuenta | Pública |
-| `/welcome` | Bienvenida con datos de la cuenta, volver y salir | Con sesión |
-| `/admin` | Gestión de usuarios (roles, eliminación, stats) | Solo admin |
+### Panel de administración
+- 📊 **Inicio**: ventas confirmadas, transferencias por validar, stock bajo,
+  últimos pedidos.
+- 🧾 **Pedidos** (tarea diaria): filtros por estado, detalle completo,
+  **validar pagos por transferencia**, marcar entregado, cancelar con
+  reposición automática de stock.
+- 📦 **Productos** (tarea diaria): editor todo-en-uno con subida de imágenes
+  (se guardan en un volumen, no URLs), categorías creadas al vuelo, opciones
+  (hasta 3: talle/color/lo que sea) y matriz de stock + precio + SKU por
+  combinación.
+- 👥 **Usuarios**: roles y gestión de cuentas (heredado de la plantilla).
+- ⚙ **Configuración** (una sola vez, separada por clasificaciones):
+  General · Pagos (MP + transferencia) · Envíos · Emails (SMTP) · Catálogo.
+
+### Automático
+- ✉ Emails de confirmación de pedido, instrucciones de transferencia,
+  confirmación de pago y aviso al admin (SMTP configurable; sin SMTP se
+  registran en logs).
+- 🔔 Webhook de Mercado Pago + verificación del pago al volver del checkout
+  (nunca se confía en el cliente: siempre se consulta la API de MP).
+- 📉 Reserva de stock atómica al crear el pedido (sin sobreventa) y
+  devolución al cancelar.
 
 ## 🧱 Stack
 
 | Capa | Tecnología |
 |---|---|
 | Framework | Next.js 15 (App Router) + React 19 |
-| Autenticación | Auth.js v5 (NextAuth) + adaptador Prisma |
+| Autenticación | Auth.js v5 + adaptador Prisma (JWT) |
 | Base de datos | PostgreSQL 16 + Prisma ORM |
-| Estilos | Tailwind CSS (animaciones CSS puras) |
-| Infraestructura | Docker + Docker Compose |
+| Pagos | Mercado Pago Checkout Pro (API REST) |
+| Emails | Nodemailer (SMTP configurable desde el panel) |
+| Estilos | Tailwind CSS + animaciones CSS (estándares de animations.dev) |
+| Infraestructura | Docker + Docker Compose (volúmenes para DB e imágenes) |
+
+## 🗺️ Rutas principales
+
+| Ruta | Descripción | Acceso |
+|---|---|---|
+| `/` | Portada de la tienda | Pública |
+| `/catalogo` · `/producto/[slug]` | Catálogo y detalle | Pública |
+| `/carrito` · `/checkout` | Compra (checkout requiere sesión) | Pública / Sesión |
+| `/pedido/[código]` | Seguimiento + instrucciones de pago | Pública |
+| `/mis-pedidos` · `/welcome` | Área del cliente | Sesión |
+| `/admin/...` | Panel completo | Solo admin |
+| `/api/webhooks/mercadopago` | Notificaciones de pago | MP |
 
 ## 📁 Estructura
 
 ```
-├── docker-compose.yml        # Orquestación: app + PostgreSQL
-├── Dockerfile                # Build multi-stage de la app
-├── docker/entrypoint.sh      # Migra el esquema + seed + arranca Next
-├── prisma/
-│   ├── schema.prisma         # Modelos: User (con rol), Account, Session...
-│   └── seed.js               # Crea/actualiza el usuario admin
-├── src/
-│   ├── auth.ts               # Auth.js: credenciales + Google + Prisma
-│   ├── auth.config.ts        # Config edge-safe (middleware) + callbacks
-│   ├── middleware.ts         # Protección de rutas
-│   ├── app/                  # Páginas: /, /login, /register, /welcome, /admin
-│   ├── components/           # UI reutilizable (formularios, tabla, fondo...)
-│   └── lib/                  # Prisma client, validaciones (zod), marca
-├── .env.example              # Todas las variables documentadas
-└── PASOS-EXTERNOS.md         # Lo único que tienes que hacer tú fuera del repo
+├── docker-compose.yml            # app + PostgreSQL + volúmenes (pgdata, uploads)
+├── Dockerfile                    # build multi-stage
+├── docker/entrypoint.sh          # esquema + seed + arranque
+├── prisma/schema.prisma          # User, Product, Variant, Category, Order, StoreConfig...
+├── PASOS-EXTERNOS.md             # 🔑 claves de MP, SMTP, Google, producción
+└── src/
+    ├── app/(store)/              # tienda: portada, catálogo, producto, carrito,
+    │                             # checkout, pedido/[code], mis-pedidos
+    ├── app/admin/                # panel: dashboard, pedidos, productos,
+    │                             # usuarios, configuracion (+ server actions)
+    ├── app/api/                  # auth, registro, uploads, webhook MP
+    ├── app/uploads/[...path]/    # sirve las imágenes del volumen
+    ├── components/store|admin/   # UI de tienda y panel
+    └── lib/                      # prisma, config, dinero, mailer, MP, uploads...
 ```
 
 ## ⚙️ Configuración
 
-Todo funciona sin `.env` (hay valores por defecto para desarrollo). Para
-personalizar:
-
-```bash
-cp .env.example .env
-```
-
-Variables principales: `APP_NAME` (tu marca), `ADMIN_EMAIL` /
-`ADMIN_PASSWORD` (admin sembrado), `AUTH_SECRET` (firma de sesiones),
-`AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` (login con Google). Ver
-[`.env.example`](./.env.example) y [`PASOS-EXTERNOS.md`](./PASOS-EXTERNOS.md).
+Todo lo del negocio (marca, pagos, envíos, emails, categorías) se administra
+**desde el panel**, sin tocar código. Las variables de entorno
+([`.env.example`](./.env.example)) cubren infraestructura: base de datos,
+`AUTH_SECRET`, Google OAuth y el admin sembrado.
 
 ## 💻 Desarrollo local (sin dockerizar la app)
 
 ```bash
-# 1. Levanta solo la base de datos (descomenta "ports" del servicio db)
-docker compose up -d db
-
-# 2. Instala dependencias y prepara la base
+docker compose up -d db      # solo la base (descomenta "ports" del servicio db)
 npm install
-cp .env.example .env       # DATABASE_URL ya apunta a localhost:5432
-npm run db:push
-npm run db:seed
-
-# 3. Modo desarrollo con hot-reload
+cp .env.example .env
+npm run db:push && npm run db:seed
 npm run dev
 ```
 
-Scripts útiles: `npm run db:studio` (explorador visual de la base),
-`npm run build` / `npm start` (producción sin Docker).
-
 ## 🔒 Notas de seguridad
 
-- Las contraseñas se guardan con **bcrypt** (12 rounds); nunca en texto plano.
-- Un administrador **no puede** eliminarse ni quitarse el rol a sí mismo.
-- Las rutas protegidas se validan en el middleware **y** en cada página/acción.
-- Antes de exponer la app a internet, revisa el checklist de producción en
-  [`PASOS-EXTERNOS.md`](./PASOS-EXTERNOS.md).
+- Contraseñas con bcrypt; sesiones JWT firmadas; rutas protegidas por
+  middleware **y** verificación en cada página/acción.
+- Los precios y el stock siempre se validan en el servidor: el carrito del
+  cliente nunca define cuánto se cobra.
+- Los pagos de MP se verifican contra la API con tu Access Token (webhook y
+  retorno). Las imágenes subidas se validan por tipo y tamaño, con nombres
+  UUID y protección contra path traversal.
+- Antes de salir a producción: checklist en [`PASOS-EXTERNOS.md`](./PASOS-EXTERNOS.md).

@@ -96,7 +96,10 @@ export default async function WelcomePage() {
 
             <div className="mt-8 flex animate-fade-up flex-wrap items-center justify-center gap-3 [animation-delay:.4s]">
               <Link href="/" className="btn-ghost">
-                ← Volver al inicio
+                ← Ir a la tienda
+              </Link>
+              <Link href="/mis-pedidos" className="btn-ghost">
+                Mis pedidos
               </Link>
               <SignOutButton />
             </div>

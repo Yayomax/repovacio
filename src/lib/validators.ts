@@ -5,6 +5,26 @@ export const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+export const checkoutSchema = z.object({
+  name: z.string().trim().min(2, "Ingresa tu nombre.").max(80),
+  email: z.string().trim().toLowerCase().email("El email no es válido."),
+  phone: z.string().trim().max(30).optional().or(z.literal("")),
+  address: z.string().trim().max(300).optional().or(z.literal("")),
+  notes: z.string().trim().max(500).optional().or(z.literal("")),
+  shippingOptionId: z.string().optional().or(z.literal("")),
+  paymentMethod: z.enum(["MERCADOPAGO", "TRANSFER"]),
+  items: z
+    .array(
+      z.object({
+        variantId: z.string().min(1),
+        quantity: z.number().int().min(1).max(999),
+      })
+    )
+    .min(1, "El carrito está vacío."),
+});
+
+export type CheckoutInput = z.infer<typeof checkoutSchema>;
+
 export const registerSchema = z.object({
   name: z
     .string()

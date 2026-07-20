@@ -25,7 +25,8 @@ export default {
       const isAdmin = auth?.user?.role === "ADMIN";
       const { pathname } = nextUrl;
 
-      if (pathname.startsWith("/welcome")) return isLoggedIn;
+      const userAreas = ["/welcome", "/mis-pedidos", "/checkout"];
+      if (userAreas.some((area) => pathname.startsWith(area))) return isLoggedIn;
 
       if (pathname.startsWith("/admin")) {
         if (!isLoggedIn) return false;

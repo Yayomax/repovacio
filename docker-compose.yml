@@ -25,8 +25,11 @@ services:
         condition: service_healthy
     ports:
       - "3000:3000"
+    volumes:
+      - uploads:/app/uploads
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-whitelabel}:${POSTGRES_PASSWORD:-whitelabel}@db:5432/${POSTGRES_DB:-whitelabel}?schema=public
+      UPLOADS_DIR: /app/uploads
       AUTH_SECRET: ${AUTH_SECRET:-dev-secret-cambiame-en-produccion}
       AUTH_URL: ${AUTH_URL:-http://localhost:3000}
       AUTH_TRUST_HOST: "true"
@@ -39,3 +42,4 @@ services:
 
 volumes:
   pgdata:
+  uploads:
