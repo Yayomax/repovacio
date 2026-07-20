@@ -53,7 +53,70 @@ export default async function AdminProductsPage() {
             </Link>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+            {/* Tarjetas en mobile */}
+            <ul className="divide-y divide-white/5 md:hidden">
+              {products.map((product) => {
+                const totalStock = product.variants.reduce(
+                  (sum, variant) => sum + variant.stock,
+                  0
+                );
+                return (
+                  <li key={product.id}>
+                    <Link
+                      href={`/admin/productos/${product.id}`}
+                      className="flex items-center gap-3 px-4 py-3.5 transition-colors duration-150 active:bg-white/[0.06]"
+                    >
+                      <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-white/5">
+                        {product.images[0] ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={`/uploads/${product.images[0].path}`}
+                            alt=""
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="grid h-full w-full place-items-center text-neutral-600">
+                            ◻
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-white">
+                          {product.featured && (
+                            <span className="mr-1" title="Destacado">
+                              ★
+                            </span>
+                          )}
+                          {product.name}
+                        </p>
+                        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-neutral-400">
+                          <span className="font-semibold tabular-nums text-neutral-200">
+                            {formatMoney(product.priceCents, config.currency)}
+                          </span>
+                          <span
+                            className={
+                              totalStock === 0
+                                ? "text-red-300"
+                                : totalStock <= 3
+                                  ? "text-neutral-200"
+                                  : ""
+                            }
+                          >
+                            {totalStock} u.
+                          </span>
+                          {!product.active && <span>· Borrador</span>}
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-neutral-600">→</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+
+            {/* Tabla en escritorio */}
+            <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[720px] text-left text-sm">
               <thead>
                 <tr className="border-b border-white/10 text-xs uppercase tracking-widest text-neutral-500">
@@ -139,7 +202,8 @@ export default async function AdminProductsPage() {
                 })}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         )}
       </div>
     </div>

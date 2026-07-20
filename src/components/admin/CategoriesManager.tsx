@@ -52,7 +52,10 @@ export function CategoriesManager({ categories }: { categories: CategoryRow[] })
             const draft = drafts[category.id] ?? category.name;
             const changed = draft.trim() !== category.name;
             return (
-              <li key={category.id} className="card flex items-center gap-3 p-3.5">
+              <li
+                key={category.id}
+                className="card flex flex-wrap items-center gap-2.5 p-3.5"
+              >
                 <input
                   value={draft}
                   onChange={(event) =>
@@ -61,7 +64,7 @@ export function CategoriesManager({ categories }: { categories: CategoryRow[] })
                       [category.id]: event.target.value,
                     }))
                   }
-                  className="field py-2 text-sm"
+                  className="field min-w-36 flex-1 py-2 text-sm"
                 />
                 <span className="shrink-0 text-xs text-neutral-500">
                   {category.productCount}{" "}

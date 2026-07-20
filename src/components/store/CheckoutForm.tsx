@@ -115,7 +115,7 @@ export function CheckoutForm({
               <label htmlFor="phone" className="text-xs font-medium uppercase tracking-widest text-neutral-400">
                 Teléfono <span className="normal-case text-neutral-600">(opcional)</span>
               </label>
-              <input id="phone" name="phone" className="field" placeholder="+54 9 ..." />
+              <input id="phone" name="phone" type="tel" className="field" placeholder="+54 9 ..." />
             </div>
             <div className="space-y-1.5 sm:col-span-2">
               <label htmlFor="address" className="text-xs font-medium uppercase tracking-widest text-neutral-400">

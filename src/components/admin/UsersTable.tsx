@@ -15,7 +15,87 @@ type UserRow = {
 
 export function UsersTable({ users }: { users: UserRow[] }) {
   return (
-    <div className="overflow-x-auto">
+    <>
+      {/* Tarjetas en mobile */}
+      <ul className="divide-y divide-white/5 md:hidden">
+        {users.map((user) => {
+          const displayName = user.name ?? user.email.split("@")[0];
+          return (
+            <li key={user.id} className="space-y-3 px-4 py-4">
+              <div className="flex items-center gap-3">
+                <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full border border-white/15 bg-white/10 text-sm font-semibold">
+                  {user.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={user.image}
+                      alt={displayName}
+                      referrerPolicy="no-referrer"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    displayName.charAt(0).toUpperCase()
+                  )}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-white">
+                    {displayName}
+                    {user.isSelf && (
+                      <span className="ml-2 text-xs text-neutral-500">(tú)</span>
+                    )}
+                  </p>
+                  <p className="truncate text-xs text-neutral-400">{user.email}</p>
+                </div>
+                <span
+                  className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                    user.role === "ADMIN"
+                      ? "bg-white text-black"
+                      : "border border-white/20 text-neutral-300"
+                  }`}
+                >
+                  {user.role === "ADMIN" ? "Admin" : "Usuario"}
+                </span>
+              </div>
+              {!user.isSelf && (
+                <div className="flex gap-2">
+                  <form action={toggleUserRole} className="flex-1">
+                    <input type="hidden" name="userId" value={user.id} />
+                    <button
+                      type="submit"
+                      className="press w-full rounded-lg border border-white/15 px-3 py-2 text-xs font-medium text-neutral-300 transition-colors duration-150 hover:border-white/40 hover:text-white"
+                    >
+                      {user.role === "ADMIN" ? "Quitar admin" : "Hacer admin"}
+                    </button>
+                  </form>
+                  <form
+                    action={deleteUser}
+                    className="flex-1"
+                    onSubmit={(event) => {
+                      if (
+                        !window.confirm(
+                          `¿Eliminar la cuenta de ${user.email}? Esta acción no se puede deshacer.`
+                        )
+                      ) {
+                        event.preventDefault();
+                      }
+                    }}
+                  >
+                    <input type="hidden" name="userId" value={user.id} />
+                    <button
+                      type="submit"
+                      className="press w-full rounded-lg border border-white/15 px-3 py-2 text-xs font-medium text-neutral-300 transition-colors duration-150 hover:border-red-400/60 hover:text-red-300"
+                    >
+                      Eliminar
+                    </button>
+                  </form>
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+
+      {/* Tabla en escritorio */}
+      <div className="hidden overflow-x-auto md:block">
       <table className="w-full min-w-[640px] text-left text-sm">
         <thead>
           <tr className="border-b border-white/10 text-xs uppercase tracking-widest text-neutral-500">
@@ -125,6 +205,7 @@ export function UsersTable({ users }: { users: UserRow[] }) {
           })}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
 }

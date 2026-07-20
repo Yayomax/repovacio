@@ -351,6 +351,7 @@ export function ConfigEmailsForm({
           <input
             id="smtpPort"
             name="smtpPort"
+            inputMode="numeric"
             defaultValue={initial.smtpPort}
             className="field"
             placeholder="587"

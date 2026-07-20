@@ -294,7 +294,7 @@ export function ProductForm({
               placeholder="Materiales, medidas, cuidados..."
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label htmlFor="product-price" className={inputLabel}>
                 Precio
@@ -302,6 +302,7 @@ export function ProductForm({
               <input
                 id="product-price"
                 type="number"
+                inputMode="decimal"
                 min="0"
                 step="0.01"
                 required
@@ -319,6 +320,7 @@ export function ProductForm({
               <input
                 id="product-compare"
                 type="number"
+                inputMode="decimal"
                 min="0"
                 step="0.01"
                 value={compareAt}
@@ -353,12 +355,13 @@ export function ProductForm({
                     Portada
                   </span>
                 )}
-                <div className="absolute inset-x-0 bottom-0 flex justify-center gap-1 bg-black/70 p-1.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+                {/* En touch no hay hover: los controles quedan siempre visibles */}
+                <div className="absolute inset-x-0 bottom-0 flex justify-center gap-1.5 bg-black/70 p-1.5 md:opacity-0 md:transition-opacity md:duration-150 md:group-hover:opacity-100">
                   <button
                     type="button"
                     aria-label="Mover a la izquierda"
                     onClick={() => moveImage(index, -1)}
-                    className="press rounded bg-white/10 px-2 text-xs hover:bg-white/25"
+                    className="press min-w-8 rounded-md bg-white/10 px-2 py-1 text-xs hover:bg-white/25"
                   >
                     ←
                   </button>
@@ -368,7 +371,7 @@ export function ProductForm({
                     onClick={() =>
                       setImages((current) => current.filter((_, i) => i !== index))
                     }
-                    className="press rounded bg-white/10 px-2 text-xs hover:bg-red-400/40"
+                    className="press min-w-8 rounded-md bg-white/10 px-2 py-1 text-xs hover:bg-red-400/40"
                   >
                     ✕
                   </button>
@@ -376,7 +379,7 @@ export function ProductForm({
                     type="button"
                     aria-label="Mover a la derecha"
                     onClick={() => moveImage(index, 1)}
-                    className="press rounded bg-white/10 px-2 text-xs hover:bg-white/25"
+                    className="press min-w-8 rounded-md bg-white/10 px-2 py-1 text-xs hover:bg-white/25"
                   >
                     →
                   </button>
@@ -461,30 +464,114 @@ export function ProductForm({
                     </button>
                   </span>
                 ))}
-                <input
-                  value={valueDrafts[index] ?? ""}
-                  onChange={(event) =>
-                    setValueDrafts((current) => ({
-                      ...current,
-                      [index]: event.target.value,
-                    }))
-                  }
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      addOptionValue(index);
+                <div className="flex w-full items-center gap-2 sm:w-auto">
+                  <input
+                    value={valueDrafts[index] ?? ""}
+                    onChange={(event) =>
+                      setValueDrafts((current) => ({
+                        ...current,
+                        [index]: event.target.value,
+                      }))
                     }
-                  }}
-                  onBlur={() => addOptionValue(index)}
-                  placeholder="Agregar valor y Enter (ej: M)"
-                  className="field w-52 py-1.5 text-sm"
-                />
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        addOptionValue(index);
+                      }
+                    }}
+                    placeholder="Agregar valor (ej: M)"
+                    className="field min-w-0 flex-1 py-1.5 sm:w-48 sm:flex-none"
+                  />
+                  <button
+                    type="button"
+                    aria-label="Agregar valor"
+                    onClick={() => addOptionValue(index)}
+                    disabled={!(valueDrafts[index] ?? "").trim()}
+                    className="press grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-white/15 text-white transition-colors duration-150 hover:border-white/40 disabled:opacity-40"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
             </div>
           ))}
 
-          {/* Matriz de stock */}
-          <div className="mt-5 overflow-x-auto">
+          {/* Matriz de stock: tarjetas en mobile, tabla en escritorio */}
+          <div className="mt-5 space-y-3 sm:hidden">
+            {combinations(validOptions).map((combo) => {
+              const key = optionsKey(combo);
+              const draft = variantDraft(key);
+              const soldOut = (Number.parseInt(draft.stock || "0", 10) || 0) === 0;
+              return (
+                <div
+                  key={key || "default"}
+                  className="rounded-xl border border-white/10 bg-white/[0.03] p-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="font-semibold">{variantName(combo)}</p>
+                    <span
+                      className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
+                        soldOut
+                          ? "bg-red-400/20 text-red-300"
+                          : "bg-white/10 text-neutral-200"
+                      }`}
+                    >
+                      {soldOut ? "Sin stock" : `${draft.stock} u.`}
+                    </span>
+                  </div>
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-medium uppercase tracking-widest text-neutral-500">
+                        Stock
+                      </label>
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        min="0"
+                        value={draft.stock}
+                        onChange={(event) =>
+                          setVariantField(key, "stock", event.target.value)
+                        }
+                        className="field px-3 py-2"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-medium uppercase tracking-widest text-neutral-500">
+                        Precio
+                      </label>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        min="0"
+                        step="0.01"
+                        value={draft.price}
+                        onChange={(event) =>
+                          setVariantField(key, "price", event.target.value)
+                        }
+                        placeholder="Base"
+                        className="field px-3 py-2"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-medium uppercase tracking-widest text-neutral-500">
+                        SKU
+                      </label>
+                      <input
+                        value={draft.sku}
+                        onChange={(event) =>
+                          setVariantField(key, "sku", event.target.value)
+                        }
+                        placeholder="Opc."
+                        className="field px-3 py-2"
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-5 hidden overflow-x-auto sm:block">
             <table className="w-full min-w-[480px] text-left text-sm">
               <thead>
                 <tr className="border-b border-white/10 text-xs uppercase tracking-widest text-neutral-500">
@@ -508,6 +595,7 @@ export function ProductForm({
                       <td className="py-2.5 pr-4">
                         <input
                           type="number"
+                          inputMode="numeric"
                           min="0"
                           value={draft.stock}
                           onChange={(event) =>
@@ -519,6 +607,7 @@ export function ProductForm({
                       <td className="py-2.5 pr-4">
                         <input
                           type="number"
+                          inputMode="decimal"
                           min="0"
                           step="0.01"
                           value={draft.price}
@@ -635,14 +724,23 @@ export function ProductForm({
           </div>
         </section>
 
-        <button type="submit" disabled={pending || uploading} className="btn-solid w-full py-3">
-          {pending ? <Spinner /> : null}
-          {pending
-            ? "Guardando..."
-            : initial
-              ? "Guardar cambios"
-              : "Publicar producto"}
-        </button>
+        {/* En mobile el guardar queda fijo sobre la barra de navegación */}
+        <div className="fixed inset-x-0 z-30 border-t border-white/10 bg-[#080808]/95 px-4 py-3 backdrop-blur-xl [bottom:calc(3.6rem+env(safe-area-inset-bottom))] md:static md:z-auto md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
+          <button
+            type="submit"
+            disabled={pending || uploading}
+            className="btn-solid w-full py-3"
+          >
+            {pending ? <Spinner /> : null}
+            {pending
+              ? "Guardando..."
+              : uploading
+                ? "Subiendo imágenes..."
+                : initial
+                  ? "Guardar cambios"
+                  : "Publicar producto"}
+          </button>
+        </div>
 
         {initial && (
           <button

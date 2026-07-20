@@ -52,6 +52,24 @@ export async function StoreHeader() {
           <CartButton />
         </div>
       </div>
+
+      {/* Navegación mobile */}
+      <nav className="flex items-center gap-5 overflow-x-auto px-6 pb-3 text-sm text-neutral-300 md:hidden">
+        <Link href="/" className="shrink-0 transition-colors hover:text-white">
+          Inicio
+        </Link>
+        <Link href="/catalogo" className="shrink-0 transition-colors hover:text-white">
+          Catálogo
+        </Link>
+        {session?.user && (
+          <Link
+            href="/mis-pedidos"
+            className="shrink-0 transition-colors hover:text-white"
+          >
+            Mis pedidos
+          </Link>
+        )}
+      </nav>
     </header>
   );
 }

@@ -53,7 +53,7 @@ export function ShippingManager({ options }: { options: ShippingRow[] }) {
           {options.map((option) => (
             <li
               key={option.id}
-              className={`card flex items-center justify-between gap-3 p-4 ${
+              className={`card flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between ${
                 option.active ? "" : "opacity-50"
               }`}
             >
@@ -70,7 +70,7 @@ export function ShippingManager({ options }: { options: ShippingRow[] }) {
                   </p>
                 )}
               </div>
-              <div className="flex shrink-0 items-center gap-2">
+              <div className="flex shrink-0 items-center gap-2 [&>button]:flex-1 sm:[&>button]:flex-none">
                 <button
                   type="button"
                   disabled={pending}
@@ -134,6 +134,7 @@ export function ShippingManager({ options }: { options: ShippingRow[] }) {
         <input
           name="price"
           type="number"
+          inputMode="decimal"
           min="0"
           step="0.01"
           placeholder="Precio"

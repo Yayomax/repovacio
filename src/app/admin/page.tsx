@@ -40,7 +40,7 @@ export default async function AdminDashboardPage() {
     {
       label: "Ventas confirmadas",
       value: formatMoney(salesAggregate._sum.totalCents ?? 0, config.currency),
-      hint: `${salesAggregate._count} pedidos pagados`,
+      hint: `${salesAggregate._count} ${salesAggregate._count === 1 ? "pedido pagado" : "pedidos pagados"}`,
     },
     {
       label: "Transferencias por validar",

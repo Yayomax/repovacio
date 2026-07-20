@@ -1,7 +1,15 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Toaster } from "sonner";
 import { appName } from "@/lib/brand";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  // viewport-fit=cover habilita env(safe-area-inset-*) en iPhone
+  viewportFit: "cover",
+  themeColor: "#060606",
+};
 
 export const metadata: Metadata = {
   title: {

@@ -79,7 +79,47 @@ export default async function AdminOrdersPage(props: {
             No hay pedidos en esta vista.
           </p>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+            {/* Tarjetas en mobile */}
+            <ul className="divide-y divide-white/5 md:hidden">
+              {orders.map((order) => (
+                <li key={order.id}>
+                  <Link
+                    href={`/admin/pedidos/${order.id}`}
+                    className="flex items-center justify-between gap-3 px-4 py-3.5 transition-colors duration-150 active:bg-white/[0.06]"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-semibold text-white">
+                          {order.code}
+                        </span>
+                        <OrderStatusBadge status={order.status} />
+                      </div>
+                      <p className="mt-1 truncate text-xs text-neutral-400">
+                        {order.name} ·{" "}
+                        {order.paymentMethod === "TRANSFER"
+                          ? "Transferencia"
+                          : "Mercado Pago"}{" "}
+                        ·{" "}
+                        {new Intl.DateTimeFormat("es", {
+                          day: "2-digit",
+                          month: "short",
+                        }).format(order.createdAt)}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className="text-sm font-semibold tabular-nums">
+                        {formatMoney(order.totalCents, config.currency)}
+                      </span>
+                      <span className="text-neutral-600">→</span>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            {/* Tabla en escritorio */}
+            <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[720px] text-left text-sm">
               <thead>
                 <tr className="border-b border-white/10 text-xs uppercase tracking-widest text-neutral-500">
@@ -131,7 +171,8 @@ export default async function AdminOrdersPage(props: {
                 ))}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         )}
       </div>
     </div>
