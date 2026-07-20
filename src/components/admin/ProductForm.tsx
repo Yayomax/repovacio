@@ -336,7 +336,9 @@ export function ProductForm({
         <section className="card p-6">
           <h2 className="font-semibold">Imágenes</h2>
           <p className="mt-1 text-xs text-neutral-500">
-            La primera imagen es la portada. JPG, PNG o WebP de hasta 8 MB.
+            La primera imagen es la portada. Sube cualquier foto (JPG, PNG,
+            HEIC del iPhone, etc., hasta 25 MB): se optimiza y convierte a
+            WebP automáticamente.
           </p>
           <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
             {images.map((image, index) => (
@@ -398,7 +400,7 @@ export function ProductForm({
               )}
               <input
                 type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                accept="image/*,.heic,.heif"
                 multiple
                 className="hidden"
                 onChange={(event) => {

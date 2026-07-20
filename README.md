@@ -45,9 +45,11 @@ claves de pago y el SMTP se cargan después desde **Admin → Configuración**
   **validar pagos por transferencia**, marcar entregado, cancelar con
   reposición automática de stock.
 - 📦 **Productos** (tarea diaria): editor todo-en-uno con subida de imágenes
-  (se guardan en un volumen, no URLs), categorías creadas al vuelo, opciones
-  (hasta 3: talle/color/lo que sea) y matriz de stock + precio + SKU por
-  combinación.
+  (se guardan en un volumen, no URLs) que acepta cualquier formato típico —
+  JPG/JPEG, PNG, **HEIC/HEIF del iPhone**, WebP, AVIF, GIF, TIFF, BMP — y las
+  **convierte automáticamente a WebP optimizado** (rotación EXIF corregida,
+  máx. 1600px), categorías creadas al vuelo, opciones (hasta 3:
+  talle/color/lo que sea) y matriz de stock + precio + SKU por combinación.
 - 👥 **Usuarios**: roles y gestión de cuentas (heredado de la plantilla).
 - ⚙ **Configuración** (una sola vez, separada por clasificaciones):
   General · Pagos (MP + transferencia) · Envíos · Emails (SMTP) · Catálogo.
