@@ -131,9 +131,14 @@ export function ProductForm({
           method: "POST",
           body: formData,
         });
-        const data = (await response.json()) as { path?: string; error?: string };
+        const data = (await response
+          .json()
+          .catch(() => ({}))) as { path?: string; error?: string };
         if (!response.ok || !data.path) {
-          toast.error(data.error ?? `No se pudo subir ${original.name}.`);
+          toast.error(
+            data.error ??
+              `No se pudo subir ${original.name} (código ${response.status}).`
+          );
           continue;
         }
         setImages((current) => [...current, { path: data.path!, alt: null }]);
