@@ -1,13 +1,6 @@
 import { randomBytes } from "node:crypto";
 
-export {
-  combinations,
-  optionsKey,
-  parseProductOptions,
-  slugify,
-  variantName,
-  type ProductOptions,
-} from "@/lib/product-options";
+export { DEFAULT_SIZE_NAME, sizeKey, slugify } from "@/lib/product-options";
 
 /** Código corto legible para pedidos, ej. "WL-4F7K2Q". Solo servidor. */
 export function generateOrderCode(): string {

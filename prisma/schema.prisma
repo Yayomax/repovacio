@@ -79,8 +79,6 @@ model Product {
   compareAtCents Int? /// precio anterior tachado (oferta)
   active         Boolean  @default(true)
   featured       Boolean  @default(false)
-  /// Opciones definidas por el admin: [{ "name": "Talle", "values": ["S","M","L"] }]
-  options        Json?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -110,15 +108,17 @@ model ProductImage {
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
-/// Cada combinación de opciones con su stock. Un producto sin opciones
-/// tiene una única variante "default".
+/// Stock por talle. Cada fila es un talle (name = "S", "M", "42"...) con su
+/// stock. Un producto sin talles tiene una única fila name = "Único".
+/// `optionsKey` guarda el nombre del talle normalizado (índice único por
+/// producto). `sku`/`priceCents` quedan sin uso (compatibilidad de esquema).
 model ProductVariant {
   id         String  @id @default(cuid())
   productId  String
-  name       String /// ej. "Negro / M" o "Único"
-  optionsKey String /// combinación normalizada, ej. "color=negro|talle=m"
+  name       String /// talle visible, ej. "M" o "Único"
+  optionsKey String /// talle normalizado, ej. "m" o "default"
   sku        String?
-  priceCents Int? /// override opcional del precio del producto
+  priceCents Int?
   stock      Int     @default(0)
 
   product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)

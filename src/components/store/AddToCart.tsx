@@ -6,20 +6,17 @@ import { toast } from "sonner";
 import { useCart } from "@/components/store/CartProvider";
 import { QtyStepper } from "@/components/store/QtyStepper";
 import { formatMoney } from "@/lib/money";
-import { optionsKey, type ProductOptions } from "@/lib/product-options";
+import { DEFAULT_SIZE_NAME } from "@/lib/product-options";
 
-type VariantData = {
+type SizeData = {
   id: string;
   name: string;
-  optionsKey: string;
-  priceCents: number | null;
   stock: number;
 };
 
 export function AddToCart({
   product,
-  options,
-  variants,
+  sizes,
 }: {
   product: {
     id: string;
@@ -28,67 +25,46 @@ export function AddToCart({
     priceCents: number;
     image: string | null;
   };
-  options: ProductOptions;
-  variants: VariantData[];
+  sizes: SizeData[];
 }) {
   const { addItem } = useCart();
 
-  // Preselecciona la primera combinación con stock
-  const initialSelection = useMemo(() => {
-    const target = variants.find((variant) => variant.stock > 0) ?? variants[0];
-    const selection: Record<string, string> = {};
-    if (!target) return selection;
+  // El producto maneja talles si hay más de una fila o la única no es "Único".
+  const hasSizes =
+    sizes.length > 1 ||
+    (sizes.length === 1 && sizes[0].name !== DEFAULT_SIZE_NAME);
 
-    const targetValues = new Map(
-      target.optionsKey
-        .split("|")
-        .filter(Boolean)
-        .map((part) => part.split("=") as [string, string])
-    );
-    for (const option of options) {
-      const match = option.values.find(
-        (value) =>
-          targetValues.get(option.name.trim().toLowerCase()) ===
-          value.trim().toLowerCase()
-      );
-      selection[option.name] = match ?? option.values[0];
-    }
-    return selection;
-  }, [options, variants]);
+  const initialId = useMemo(() => {
+    const withStock = sizes.find((size) => size.stock > 0);
+    return (withStock ?? sizes[0])?.id ?? null;
+  }, [sizes]);
 
-  const [selection, setSelection] = useState<Record<string, string>>(initialSelection);
+  const [selectedId, setSelectedId] = useState<string | null>(initialId);
   const [quantity, setQuantity] = useState(1);
 
-  const selectedVariant = useMemo(() => {
-    if (options.length === 0) return variants[0] ?? null;
-    const key = optionsKey(selection);
-    return variants.find((variant) => variant.optionsKey === key) ?? null;
-  }, [options.length, selection, variants]);
-
-  const priceCents = selectedVariant?.priceCents ?? product.priceCents;
-  const stock = selectedVariant?.stock ?? 0;
-  const canBuy = selectedVariant !== null && stock > 0;
+  const selected = sizes.find((size) => size.id === selectedId) ?? null;
+  const stock = selected?.stock ?? 0;
+  const canBuy = selected !== null && stock > 0;
 
   function handleAdd() {
-    if (!selectedVariant || stock <= 0) return;
+    if (!selected || stock <= 0) return;
     addItem(
       {
-        variantId: selectedVariant.id,
+        variantId: selected.id,
         productId: product.id,
         slug: product.slug,
         name: product.name,
-        variantName: selectedVariant.name,
-        unitCents: priceCents,
+        variantName: selected.name,
+        unitCents: product.priceCents,
         image: product.image,
         maxStock: stock,
       },
       quantity
     );
     toast.success("Agregado al carrito", {
-      description:
-        selectedVariant.name !== "Único"
-          ? `${product.name} (${selectedVariant.name}) × ${quantity}`
-          : `${product.name} × ${quantity}`,
+      description: hasSizes
+        ? `${product.name} (${selected.name}) × ${quantity}`
+        : `${product.name} × ${quantity}`,
     });
     setQuantity(1);
   }
@@ -96,33 +72,25 @@ export function AddToCart({
   return (
     <div className="space-y-6">
       <p className="text-3xl font-semibold tabular-nums">
-        {formatMoney(priceCents)}
+        {formatMoney(product.priceCents)}
       </p>
 
-      {options.map((option) => (
-        <div key={option.name}>
+      {hasSizes && (
+        <div>
           <p className="mb-2 text-xs font-medium uppercase tracking-widest text-neutral-400">
-            {option.name}
+            Talle
           </p>
           <div className="flex flex-wrap gap-2">
-            {option.values.map((value) => {
-              const isSelected = selection[option.name] === value;
-              const wouldBeKey = optionsKey({ ...selection, [option.name]: value });
-              const wouldBeVariant = variants.find(
-                (variant) => variant.optionsKey === wouldBeKey
-              );
-              const disabled = !wouldBeVariant || wouldBeVariant.stock <= 0;
-
+            {sizes.map((size) => {
+              const isSelected = size.id === selectedId;
+              const disabled = size.stock <= 0;
               return (
                 <button
-                  key={value}
+                  key={size.id}
                   type="button"
                   disabled={disabled && !isSelected}
                   onClick={() => {
-                    setSelection((current) => ({
-                      ...current,
-                      [option.name]: value,
-                    }));
+                    setSelectedId(size.id);
                     setQuantity(1);
                   }}
                   className={`press rounded-full border px-4 py-2 text-sm transition-colors duration-150 ${
@@ -133,13 +101,13 @@ export function AddToCart({
                         : "border-white/20 text-white hover:border-white/60"
                   }`}
                 >
-                  {value}
+                  {size.name}
                 </button>
               );
             })}
           </div>
         </div>
-      ))}
+      )}
 
       <div className="flex items-center gap-4">
         <QtyStepper

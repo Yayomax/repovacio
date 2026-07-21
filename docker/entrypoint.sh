@@ -9,8 +9,10 @@ if [ -z "$AUTH_URL" ] && [ -n "$RENDER_EXTERNAL_URL" ]; then
 fi
 
 echo "⏳ Sincronizando esquema de base de datos..."
+# --accept-data-loss: el esquema (versionado) es la fuente de verdad; al
+# quitar/cambiar columnas, db push aplica el cambio en vez de fallar.
 ATTEMPTS=0
-until npx prisma db push --skip-generate; do
+until npx prisma db push --skip-generate --accept-data-loss; do
   ATTEMPTS=$((ATTEMPTS + 1))
   if [ "$ATTEMPTS" -ge 10 ]; then
     echo "❌ No se pudo conectar a la base de datos después de $ATTEMPTS intentos."

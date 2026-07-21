@@ -8,7 +8,6 @@ import {
   mpConfigured,
   transferConfigured,
 } from "@/lib/store-config";
-import { parseProductOptions } from "@/lib/utils";
 import { AddToCart } from "@/components/store/AddToCart";
 import { ProductCard } from "@/components/store/ProductCard";
 import { ProductGallery } from "@/components/store/ProductGallery";
@@ -43,7 +42,6 @@ export default async function ProductPage(props: {
 
   if (!product || !product.active) notFound();
 
-  const options = parseProductOptions(product.options);
   const relatedCategoryIds = product.categories.map((c) => c.id);
   const related =
     relatedCategoryIds.length > 0
@@ -131,12 +129,9 @@ export default async function ProductPage(props: {
                 priceCents: product.priceCents,
                 image: product.images[0]?.path ?? null,
               }}
-              options={options}
-              variants={product.variants.map((variant) => ({
+              sizes={product.variants.map((variant) => ({
                 id: variant.id,
                 name: variant.name,
-                optionsKey: variant.optionsKey,
-                priceCents: variant.priceCents,
                 stock: variant.stock,
               }))}
             />

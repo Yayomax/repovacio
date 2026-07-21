@@ -2,17 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { Prisma } from "@prisma/client";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { deleteUpload } from "@/lib/uploads";
-import {
-  combinations,
-  optionsKey,
-  slugify,
-  variantName,
-} from "@/lib/product-options";
+import { DEFAULT_SIZE_NAME, sizeKey, slugify } from "@/lib/product-options";
 
 async function requireAdmin() {
   const session = await auth();
@@ -41,27 +35,59 @@ const productSchema = z.object({
   images: z
     .array(z.object({ path: z.string().min(1), alt: z.string().nullable() }))
     .max(12, "Máximo 12 imágenes por producto."),
-  options: z
+  // Stock cuando el producto NO maneja talles (una sola existencia).
+  stock: z.number().int().min(0).max(1_000_000),
+  // Talles con su stock. Vacío = producto sin talles (usa `stock`).
+  sizes: z
     .array(
       z.object({
-        name: z.string().trim().min(1, "Cada opción necesita un nombre.").max(30),
-        values: z
-          .array(z.string().trim().min(1).max(40))
-          .min(1, "Cada opción necesita al menos un valor."),
+        name: z.string().trim().min(1, "Cada talle necesita un nombre.").max(40),
+        stock: z.number().int().min(0).max(1_000_000),
       })
     )
-    .max(3, "Máximo 3 opciones por producto."),
-  variants: z.array(
-    z.object({
-      selection: z.record(z.string(), z.string()),
-      stock: z.number().int().min(0).max(1_000_000),
-      priceCents: z.number().int().min(0).nullable(),
-      sku: z.string().trim().max(60).optional().or(z.literal("")),
-    })
-  ),
+    .max(50, "Máximo 50 talles por producto."),
 });
 
 export type ProductInput = z.infer<typeof productSchema>;
+
+/** Convierte los talles del formulario en filas de ProductVariant. */
+function buildVariantRows(data: ProductInput) {
+  if (data.sizes.length === 0) {
+    return [
+      {
+        name: DEFAULT_SIZE_NAME,
+        optionsKey: "default",
+        stock: data.stock,
+        priceCents: null,
+        sku: null,
+      },
+    ];
+  }
+
+  const rows: {
+    name: string;
+    optionsKey: string;
+    stock: number;
+    priceCents: null;
+    sku: null;
+  }[] = [];
+  const seen = new Set<string>();
+  for (const size of data.sizes) {
+    const key = sizeKey(size.name);
+    if (seen.has(key)) {
+      throw new Error(`El talle "${size.name}" está repetido.`);
+    }
+    seen.add(key);
+    rows.push({
+      name: size.name.trim(),
+      optionsKey: key,
+      stock: size.stock,
+      priceCents: null,
+      sku: null,
+    });
+  }
+  return rows;
+}
 
 async function uniqueSlug(name: string, excludeId?: string): Promise<string> {
   const base = slugify(name) || "producto";
@@ -93,26 +119,15 @@ export async function saveProduct(
   }
   const data = parsed.data;
 
-  // Las variantes definitivas salen SIEMPRE de las combinaciones de opciones:
-  // lo que mande el cliente solo aporta stock/precio/sku por combinación.
-  const finalVariants = combinations(data.options).map((combo) => {
-    const key = optionsKey(combo);
-    const provided = data.variants.find(
-      (variant) => optionsKey(variant.selection) === key
-    );
+  let finalVariants;
+  try {
+    finalVariants = buildVariantRows(data);
+  } catch (error) {
     return {
-      optionsKey: key,
-      name: variantName(combo),
-      stock: provided?.stock ?? 0,
-      priceCents: provided?.priceCents ?? null,
-      sku: provided?.sku || null,
+      ok: false,
+      error: error instanceof Error ? error.message : "Talles inválidos.",
     };
-  });
-
-  const optionsJson =
-    data.options.length > 0
-      ? (data.options as unknown as Prisma.InputJsonValue)
-      : Prisma.JsonNull;
+  }
 
   const baseData = {
     name: data.name,
@@ -121,7 +136,6 @@ export async function saveProduct(
     compareAtCents: data.compareAtCents,
     active: data.active,
     featured: data.featured,
-    options: optionsJson,
   };
 
   try {

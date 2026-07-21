@@ -1,9 +1,9 @@
 # ⬛ White Label Shop — Ecommerce premium en blanco y negro
 
 Ecommerce **white-label** completo y listo para cualquier rubro: catálogo con
-categorías definidas por el admin, variantes con stock por combinación,
-Mercado Pago + transferencia bancaria, emails automáticos y un panel de
-administración pensado para el trabajo diario.
+categorías definidas por el admin, stock por talle, Mercado Pago +
+transferencia bancaria, emails automáticos y un panel de administración
+pensado para el trabajo diario.
 
 > 🧬 ¿Solo necesitas login + gestión de usuarios para otro proyecto? La base
 > sin ecommerce vive en la rama [`plantilla-gestion-usuarios`](../../tree/plantilla-gestion-usuarios).
@@ -29,8 +29,8 @@ claves de pago y el SMTP se cargan después desde **Admin → Configuración**
 
 ### Tienda (clientes)
 - 🏪 Portada con destacados y categorías, catálogo con búsqueda y filtros.
-- 🧩 Página de producto con galería, selector de variantes (talle, color, lo
-  que definas) y stock en vivo por combinación.
+- 🧩 Página de producto con galería, selector de talle (cuando el producto los
+  maneja) y stock en vivo por talle.
 - 🛒 Carrito con drawer animado + página completa, persistente en el navegador.
 - 💳 Checkout con **Mercado Pago** (Checkout Pro) y **transferencia bancaria**
   con instrucciones paso a paso, código de pedido y botón de email pre-armado.
@@ -49,8 +49,8 @@ claves de pago y el SMTP se cargan después desde **Admin → Configuración**
   formato típico —
   JPG/JPEG, PNG, **HEIC/HEIF del iPhone**, WebP, AVIF, GIF, TIFF, BMP — y las
   **convierte automáticamente a WebP optimizado** (rotación EXIF corregida,
-  máx. 1600px), categorías creadas al vuelo, opciones (hasta 3:
-  talle/color/lo que sea) y matriz de stock + precio + SKU por combinación.
+  máx. 1600px), categorías creadas al vuelo y gestión de stock por talle
+  (talles libres por producto, o un stock único si no maneja talles).
 - 👥 **Usuarios**: roles y gestión de cuentas (heredado de la plantilla).
 - ⚙ **Configuración** (una sola vez, separada por clasificaciones):
   General · Pagos (MP + transferencia) · Envíos · Emails (SMTP) · Catálogo.

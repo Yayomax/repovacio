@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import { fromCents } from "@/lib/money";
-import { parseProductOptions } from "@/lib/product-options";
+import { DEFAULT_SIZE_NAME } from "@/lib/product-options";
 import {
   ProductForm,
   type ProductFormInitial,
@@ -46,20 +46,26 @@ export default async function EditProductPage(props: {
     featured: product.featured,
     categoryIds: product.categories.map((category) => category.id),
     images: product.images.map((image) => ({ path: image.path, alt: image.alt })),
-    options: parseProductOptions(product.options),
-    variants: Object.fromEntries(
-      product.variants.map((variant) => [
-        variant.optionsKey,
-        {
+    // Un único variante "Único" = producto sin talles → stock general.
+    // Cualquier otra cosa = talles con su stock.
+    ...(() => {
+      const isSingleDefault =
+        product.variants.length <= 1 &&
+        (product.variants[0]?.name ?? DEFAULT_SIZE_NAME) === DEFAULT_SIZE_NAME;
+      if (isSingleDefault) {
+        return {
+          stock: String(product.variants[0]?.stock ?? 0),
+          sizes: [],
+        };
+      }
+      return {
+        stock: "0",
+        sizes: product.variants.map((variant) => ({
+          name: variant.name,
           stock: String(variant.stock),
-          price:
-            variant.priceCents !== null
-              ? String(fromCents(variant.priceCents))
-              : "",
-          sku: variant.sku ?? "",
-        },
-      ])
-    ),
+        })),
+      };
+    })(),
   };
 
   return (

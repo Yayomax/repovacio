@@ -24,7 +24,7 @@ export default async function NewProductPage() {
         Nuevo producto
       </h1>
       <p className="mt-1 text-sm text-neutral-400">
-        Nombre, precio, fotos, categorías y variantes: todo en un solo lugar.
+        Nombre, precio, fotos, categorías y talles: todo en un solo lugar.
       </p>
 
       <div className="mt-6">
