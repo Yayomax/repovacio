@@ -10,6 +10,7 @@ import {
   saveProduct,
 } from "@/app/admin/productos/actions";
 import { Spinner } from "@/components/Spinner";
+import { prepareImageForUpload } from "@/lib/image-client";
 import { toCents } from "@/lib/money";
 import {
   combinations,
@@ -119,7 +120,10 @@ export function ProductForm({
   async function handleUpload(files: FileList | null) {
     if (!files || files.length === 0) return;
     setUploading(true);
-    for (const file of Array.from(files)) {
+    for (const original of Array.from(files)) {
+      // Se comprime en el navegador antes de subir: así el archivo viaja
+      // liviano y no lo corta el límite de tamaño del hosting.
+      const file = await prepareImageForUpload(original);
       const formData = new FormData();
       formData.append("file", file);
       try {
@@ -129,12 +133,12 @@ export function ProductForm({
         });
         const data = (await response.json()) as { path?: string; error?: string };
         if (!response.ok || !data.path) {
-          toast.error(data.error ?? `No se pudo subir ${file.name}.`);
+          toast.error(data.error ?? `No se pudo subir ${original.name}.`);
           continue;
         }
         setImages((current) => [...current, { path: data.path!, alt: null }]);
       } catch {
-        toast.error(`Error de red subiendo ${file.name}.`);
+        toast.error(`Error de red subiendo ${original.name}.`);
       }
     }
     setUploading(false);
