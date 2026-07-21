@@ -45,7 +45,8 @@ claves de pago y el SMTP se cargan después desde **Admin → Configuración**
   **validar pagos por transferencia**, marcar entregado, cancelar con
   reposición automática de stock.
 - 📦 **Productos** (tarea diaria): editor todo-en-uno con subida de imágenes
-  (se guardan en un volumen, no URLs) que acepta cualquier formato típico —
+  (guardadas en la base de datos, no URLs externas) que acepta cualquier
+  formato típico —
   JPG/JPEG, PNG, **HEIC/HEIF del iPhone**, WebP, AVIF, GIF, TIFF, BMP — y las
   **convierte automáticamente a WebP optimizado** (rotación EXIF corregida,
   máx. 1600px), categorías creadas al vuelo, opciones (hasta 3:
@@ -73,7 +74,7 @@ claves de pago y el SMTP se cargan después desde **Admin → Configuración**
 | Pagos | Mercado Pago Checkout Pro (API REST) |
 | Emails | Nodemailer (SMTP configurable desde el panel) |
 | Estilos | Tailwind CSS + animaciones CSS (estándares de animations.dev) |
-| Infraestructura | Docker + Docker Compose (volúmenes para DB e imágenes) |
+| Infraestructura | Docker + Docker Compose · deploy 1-click en Render (`render.yaml`) |
 
 ## 🗺️ Rutas principales
 
@@ -90,18 +91,19 @@ claves de pago y el SMTP se cargan después desde **Admin → Configuración**
 ## 📁 Estructura
 
 ```
-├── docker-compose.yml            # app + PostgreSQL + volúmenes (pgdata, uploads)
+├── docker-compose.yml            # app + PostgreSQL (volumen pgdata)
 ├── Dockerfile                    # build multi-stage
+├── render.yaml                   # deploy 1-click en Render (app + Postgres)
 ├── docker/entrypoint.sh          # esquema + seed + arranque
-├── prisma/schema.prisma          # User, Product, Variant, Category, Order, StoreConfig...
-├── PASOS-EXTERNOS.md             # 🔑 claves de MP, SMTP, Google, producción
+├── prisma/schema.prisma          # User, Product, Variant, Order, UploadedImage...
+├── PASOS-EXTERNOS.md             # 🔑 claves de MP, SMTP, Google, Render, producción
 └── src/
     ├── app/(store)/              # tienda: portada, catálogo, producto, carrito,
     │                             # checkout, pedido/[code], mis-pedidos
     ├── app/admin/                # panel: dashboard, pedidos, productos,
     │                             # usuarios, configuracion (+ server actions)
-    ├── app/api/                  # auth, registro, uploads, webhook MP
-    ├── app/uploads/[...path]/    # sirve las imágenes del volumen
+    ├── app/api/                  # auth, registro, uploads, webhook MP, health
+    ├── app/uploads/[...path]/    # sirve las imágenes desde la base de datos
     ├── components/store|admin/   # UI de tienda y panel
     └── lib/                      # prisma, config, dinero, mailer, MP, uploads...
 ```

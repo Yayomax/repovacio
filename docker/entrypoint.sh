@@ -1,6 +1,13 @@
 #!/bin/sh
 set -e
 
+# En Render (u otros PaaS que exponen la URL pública), AUTH_URL se
+# configura sola si no fue definida explícitamente.
+if [ -z "$AUTH_URL" ] && [ -n "$RENDER_EXTERNAL_URL" ]; then
+  export AUTH_URL="$RENDER_EXTERNAL_URL"
+  echo "🌐 AUTH_URL tomada de Render: $AUTH_URL"
+fi
+
 echo "⏳ Sincronizando esquema de base de datos..."
 ATTEMPTS=0
 until npx prisma db push --skip-generate; do

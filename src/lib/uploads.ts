@@ -1,26 +1,14 @@
 import { randomUUID } from "node:crypto";
-import fs from "node:fs/promises";
-import path from "node:path";
 import sharp, { type Sharp } from "sharp";
 import convertHeic from "heic-convert";
 import bmp from "bmp-js";
 
-export const UPLOADS_DIR =
-  process.env.UPLOADS_DIR?.trim() || path.join(process.cwd(), "uploads");
+import { prisma } from "@/lib/prisma";
 
 /** Entrada generosa (una foto de iPhone puede pesar 10+ MB); la salida WebP es liviana. */
 const MAX_INPUT_BYTES = 25 * 1024 * 1024;
 const MAX_DIMENSION = 1600;
 const WEBP_QUALITY = 82;
-
-export const CONTENT_TYPES: Record<string, string> = {
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".png": "image/png",
-  ".webp": "image/webp",
-  ".gif": "image/gif",
-  ".avif": "image/avif",
-};
 
 type ImageFormat =
   | "jpeg"
@@ -129,8 +117,9 @@ async function processToWebp(
 }
 
 /**
- * Guarda una imagen del admin convertida a WebP y devuelve su ruta relativa
- * (ej. "products/uuid.webp"), servida luego en /uploads/products/uuid.webp.
+ * Procesa una imagen del admin (→ WebP) y la guarda en la base de datos.
+ * Devuelve su ruta relativa (ej. "products/uuid.webp"), servida luego en
+ * /uploads/products/uuid.webp.
  */
 export async function saveProductImage(
   file: File
@@ -164,24 +153,25 @@ export async function saveProductImage(
     }
   }
 
-  const relative = path.posix.join("products", `${randomUUID()}.webp`);
-  const absolute = path.join(UPLOADS_DIR, relative);
-  await fs.mkdir(path.dirname(absolute), { recursive: true });
-  await fs.writeFile(absolute, webp);
+  const relative = `products/${randomUUID()}.webp`;
+  await prisma.uploadedImage.create({
+    data: {
+      path: relative,
+      data: new Uint8Array(webp),
+      contentType: "image/webp",
+    },
+  });
   return { path: relative };
 }
 
-/** Resuelve una ruta relativa dentro de UPLOADS_DIR, bloqueando path traversal. */
-export function resolveUploadPath(relative: string): string | null {
-  const absolute = path.resolve(UPLOADS_DIR, relative);
-  if (!absolute.startsWith(path.resolve(UPLOADS_DIR) + path.sep)) return null;
-  return absolute;
+export async function getUploadedImage(path: string) {
+  return prisma.uploadedImage.findUnique({ where: { path } });
 }
 
 export async function deleteUpload(relative: string): Promise<void> {
-  const absolute = resolveUploadPath(relative);
-  if (!absolute) return;
-  await fs.unlink(absolute).catch(() => {
-    /* ya no existe: ignorar */
-  });
+  await prisma.uploadedImage
+    .delete({ where: { path: relative } })
+    .catch(() => {
+      /* ya no existe: ignorar */
+    });
 }

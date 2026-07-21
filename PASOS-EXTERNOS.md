@@ -180,11 +180,40 @@ arranque.
 - [ ] `POSTGRES_PASSWORD` fuerte y puerto 5432 sin exponer.
 - [ ] `ADMIN_PASSWORD` fuerte (paso 6).
 - [ ] HTTPS con Caddy, Nginx + certbot, Traefik o el proxy de tu hosting.
-- [ ] Backup del volumen `pgdata` (base de datos) y `uploads` (imágenes).
+- [ ] Backup de la base de datos (las imágenes también viven ahí, así que
+      con respaldar PostgreSQL está todo).
 
 ---
 
-## 8. Nada más
+## 8. Deploy en Render (para probar en la nube, gratis)
+
+El repo ya incluye [`render.yaml`](./render.yaml): Render crea la app
+(Docker) y el PostgreSQL solos.
+
+1. Entra a <https://dashboard.render.com> → **New → Blueprint**.
+2. Conecta este repositorio de GitHub y elige la rama.
+3. **Apply**: se crean `repovacio-app` y `repovacio-db`. El primer build
+   tarda varios minutos (compila la imagen Docker completa).
+4. Listo: tu tienda queda en `https://repovacio-app.onrender.com` (el
+   nombre exacto lo muestra Render). No hay que configurar nada más:
+   - `AUTH_SECRET` se genera solo.
+   - `AUTH_URL` se toma automáticamente de la URL pública de Render.
+   - Las imágenes se guardan en la base de datos (el free tier no tiene
+     disco persistente, y así no se pierden en cada deploy).
+5. Si activas Google OAuth o Mercado Pago, usa esa URL de Render en los
+   callbacks (`https://TU-APP.onrender.com/api/auth/callback/google`) —
+   el webhook de MP se registra solo al ser https.
+
+**Limitaciones del free tier (para tener en cuenta):**
+- La app se duerme tras ~15 min sin visitas; el primer request luego
+  tarda ~1 minuto en despertarla.
+- El PostgreSQL gratuito **expira a los 30 días** (Render avisa por
+  email; podés crear otro o pasar a un plan pago para producción).
+- 512 MB de RAM: suficiente para probar, justo para fotos gigantes.
+
+---
+
+## 9. Nada más
 
 Catálogo, categorías, variantes, stock, imágenes, pedidos y validación de
 transferencias funcionan 100 % dentro de la app, sin servicios externos.

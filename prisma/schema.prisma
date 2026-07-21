@@ -90,6 +90,16 @@ model Product {
   orderItems OrderItem[]
 }
 
+/// Binarios de las imágenes subidas (ya convertidas a WebP). Viven en la
+/// base de datos para funcionar en hostings sin disco persistente (ej.
+/// el free tier de Render) y viajar con el backup de PostgreSQL.
+model UploadedImage {
+  path        String   @id /// ej. "products/uuid.webp"
+  data        Bytes
+  contentType String   @default("image/webp")
+  createdAt   DateTime @default(now())
+}
+
 model ProductImage {
   id        String  @id @default(cuid())
   productId String
