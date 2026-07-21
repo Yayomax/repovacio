@@ -14,8 +14,9 @@ next-env.d.ts
 # Prisma
 prisma/*.db
 
-# Imágenes subidas por el admin (en Docker viven en el volumen "uploads")
-uploads/
+# Imágenes subidas por el admin (carpeta en la raíz, solo para dev local).
+# Se ancla con "/" para NO ignorar las rutas src/app/**/uploads/ del código.
+/uploads/
 
 # Sistema / editores
 .DS_Store
